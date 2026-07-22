@@ -1,0 +1,14 @@
+# IDE
+.idea/
+*.iml
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+out/
+
+# OS
+.DS_Store
+Thumbs.db
