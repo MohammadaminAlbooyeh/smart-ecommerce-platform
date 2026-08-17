@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      POSTGRES_MULTIPLE_DATABASES: order_db,payment_db,inventory_db,user_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "29092:29092"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  # ---- Application services (build context-ha point mikonan be sibling repo-haye local) ----
+
+  # user-service:
+  #   build: ../../../user-service
+  #   ports: ["8081:8080"]
+  #   depends_on: [postgres, kafka]
+
+  # cart-service:
+  #   build: ../../../cart-service
+  #   ports: ["8082:8080"]
+  #   depends_on: [redis, kafka]
+
+  # order-service:
+  #   build: ../../../order-service
+  #   ports: ["8083:8080"]
+  #   depends_on: [postgres, kafka]
+
+  # inventory-service:
+  #   build: ../../../inventory-service
+  #   ports: ["8084:8080"]
+  #   depends_on: [postgres, kafka]
+
+  # payment-switch-gateway:
+  #   build: ../../../payment-switch-gateway
+  #   ports: ["8085:8080"]
+  #   depends_on: [postgres, kafka]
+
+  # product-search-engine:
+  #   build: ../../../product-search-engine
+  #   ports: ["8086:8080"]
+  #   depends_on: [elasticsearch, kafka]
+
+  # recommendation_engine:
+  #   build: ../../../recommendation_engine
+  #   ports: ["8087:8000"]
+  #   depends_on: [kafka]
+
+  # real_time_fraud_detection_system:
+  #   build: ../../../real_time_fraud_detection_system
+  #   ports: ["8088:8000"]
+  #   depends_on: [kafka]
+
+  # real_time_analytics_dashboard:
+  #   build: ../../../real_time_analytics_dashboard
+  #   ports: ["8089:8000"]
+  #   depends_on: [kafka]
+
+volumes:
+  postgres_data:
