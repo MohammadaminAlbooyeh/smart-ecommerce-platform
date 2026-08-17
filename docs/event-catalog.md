@@ -14,6 +14,8 @@ List-e kamel-e Kafka topic-ha va event-haee ke bein-e service-ha rad-o-badal mis
 | `order.confirmed` | order-service | recommendation_engine, real_time_analytics_dashboard | orderId, userId, items[] |
 | `order.cancelled` | order-service | real_time_analytics_dashboard | orderId, reason |
 | `product.viewed` | product-search-engine | recommendation_engine | userId, productId, timestamp |
+| `cart.checkout` | cart-service | order-service | orderId, userId, items[], totalAmount |
+| `inventory.reservation_cancel` | order-service | inventory-service | orderId (saga compensation — releases stock) |
 
 ## Naming Convention
 
