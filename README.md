@@ -27,6 +27,7 @@ Baraye jozeiat-e kamel-e me'mari be [`docs/architecture.md`](docs/architecture.m
 ```bash
 ./scripts/setup-local-env.sh   # clone + build + run hame-ye service-ha
 ./scripts/seed-demo-data.sh    # demo data seed konid
+./scripts/test-e2e.sh          # end-to-end saga (checkout -> confirm) test konid
 ```
 
 Ya mostaghim ba docker-compose:
