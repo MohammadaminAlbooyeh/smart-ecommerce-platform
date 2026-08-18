@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Inventory Service API
+  version: 1.0.0
+  description: Stock management and reservation. Consumes `order.created`, produces `inventory.reserved` / `inventory.reservation_failed`.
+paths:
+  /api/inventory/items:
+    get:
+      summary: List all stock items
+      responses:
+        "200":
+          description: Stock items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockItem"
+    post:
+      summary: Upsert stock item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, warehouseId, quantity]
+              properties:
+                productId:
+                  type: string
+                warehouseId:
+                  type: integer
+                quantity:
+                  type: integer
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockItem"
+  /api/inventory/items/{productId}:
+    get:
+      summary: Get stock item by product id
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stock item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockItem"
+    post:
+      summary: Restock a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+      responses:
+        "200":
+          description: Updated
+  /api/inventory/warehouses:
+    get:
+      summary: List warehouses
+      responses:
+        "200":
+          description: Warehouses
+    post:
+      summary: Create warehouse
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, location]
+              properties:
+                name:
+                  type: string
+                location:
+                  type: string
+      responses:
+        "201":
+          description: Created
+  /api/inventory/reservations:
+    post:
+      summary: Reserve stock for an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, productId, quantity]
+              properties:
+                orderId:
+                  type: string
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        "201":
+          description: Reserved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+        "409":
+          description: Insufficient stock
+  /api/inventory/reservations/{reservationCode}/confirm:
+    post:
+      summary: Confirm a reservation
+      parameters:
+        - name: reservationCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Confirmed
+  /api/inventory/reservations/{reservationCode}/cancel:
+    post:
+      summary: Cancel a reservation (releases stock)
+      parameters:
+        - name: reservationCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cancelled
+  /api/inventory/orders/{orderId}/reservations:
+    get:
+      summary: List reservations for an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reservations
+components:
+  schemas:
+    StockItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: string
+        warehouse:
+          type: object
+        quantity:
+          type: integer
+        reservedQuantity:
+          type: integer
+        availableQuantity:
+          type: integer
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: integer
+        reservationCode:
+          type: string
+        orderId:
+          type: string
+        productId:
+          type: string
+        quantity:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, CANCELLED, EXPIRED]
+        expiresAt:
+          type: string
+          format: date-time

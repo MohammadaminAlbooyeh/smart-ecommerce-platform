@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: Payment Switch Gateway API
+  version: 1.0.0
+  description: Gateway for SEP / Behpardakht / Zarinpal. Consumes `order.awaiting_payment`, produces `payment.succeeded` / `payment.failed`.
+paths:
+  /api/payments:
+    post:
+      summary: Create a payment request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+      responses:
+        "201":
+          description: Payment initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+  /api/payments/{trackingCode}:
+    get:
+      summary: Get transaction status
+      parameters:
+        - name: trackingCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transaction
+  /api/payments/callback:
+    post:
+      summary: Gateway callback (authority confirmation)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CallbackRequest"
+      responses:
+        "200":
+          description: Confirmed
+  /api/payments/reconcile:
+    get:
+      summary: Reconciliation report by date
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Report
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      required: [orderId, amount, gatewayType, callbackUrl]
+      properties:
+        orderId:
+          type: string
+        amount:
+          type: number
+        gatewayType:
+          type: string
+          enum: [SEP, BEHPARDAKHT, ZARINPAL]
+        callbackUrl:
+          type: string
+        description:
+          type: string
+    PaymentResponse:
+      type: object
+      properties:
+        trackingCode:
+          type: string
+        gatewayType:
+          type: string
+        paymentUrl:
+          type: string
+        status:
+          type: string
+    CallbackRequest:
+      type: object
+      properties:
+        trackingCode:
+          type: string
+        authorityCode:
+          type: string
+        status:
+          type: string

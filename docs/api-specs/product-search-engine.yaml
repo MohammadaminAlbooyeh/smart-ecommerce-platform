@@ -1,0 +1,121 @@
+openapi: 3.0.3
+info:
+  title: Product Search Engine API
+  version: 1.0.0
+  description: Search, ranking, price comparison and price alerts over an Elasticsearch index.
+paths:
+  /api/search:
+    post:
+      summary: Search products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+  /api/products/{productId}:
+    get:
+      summary: Get product by id
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product
+        "404":
+          description: Not found
+  /api/products:
+    post:
+      summary: Create a product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: Created
+  /api/products/{productId}/compare:
+    get:
+      summary: Compare prices across sellers
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comparison
+  /api/alerts:
+    post:
+      summary: Create a price alert
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceAlertRequest"
+      responses:
+        "201":
+          description: Created
+  /api/alerts/user/{userId}:
+    get:
+      summary: List alerts for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alerts
+components:
+  schemas:
+    SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        category:
+          type: string
+        minPrice:
+          type: number
+        maxPrice:
+          type: number
+        page:
+          type: integer
+        size:
+          type: integer
+        userId:
+          type: string
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+        page:
+          type: integer
+    PriceAlertRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        productId:
+          type: string
+        targetPrice:
+          type: number

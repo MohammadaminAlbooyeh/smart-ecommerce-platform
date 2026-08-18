@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Cart Service API
+  version: 1.0.0
+  description: Redis-backed shopping cart. Publishes `cart.checkout` on checkout.
+paths:
+  /api/cart:
+    get:
+      summary: Get current cart
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cart items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CartItem"
+    delete:
+      summary: Clear the cart
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cleared
+  /api/cart/items:
+    post:
+      summary: Add item to cart
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItem"
+      responses:
+        "201":
+          description: Added
+  /api/cart/items/{productId}:
+    put:
+      summary: Update item quantity
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        "204":
+          description: Updated
+    delete:
+      summary: Remove item
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+  /api/cart/total:
+    get:
+      summary: Cart total amount
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Total
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalAmount:
+                    type: number
+  /api/cart/checkout:
+    post:
+      summary: Checkout — publishes cart.checkout event and clears cart
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Accepted
+components:
+  schemas:
+    CartItem:
+      type: object
+      required: [productId, name, unitPrice, quantity]
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        unitPrice:
+          type: number
+          format: decimal
+        quantity:
+          type: integer
+          minimum: 1
+        subtotal:
+          type: number
