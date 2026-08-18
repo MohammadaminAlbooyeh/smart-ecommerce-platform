@@ -6,11 +6,11 @@ services:
     environment:
       POSTGRES_USER: platform
       POSTGRES_PASSWORD: platform
-      POSTGRES_MULTIPLE_DATABASES: order_db,payment_db,inventory_db,user_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
 
   redis:
     image: redis:7
@@ -46,50 +46,124 @@ services:
 
   # ---- Application services (build context-ha point mikonan be sibling repo-haye local) ----
 
-  # user-service:
-  #   build: ../../../user-service
-  #   ports: ["8081:8080"]
-  #   depends_on: [postgres, kafka]
+  user-service:
+    build: ../../../user-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/user_db
+      DB_USERNAME: platform
+      DB_PASSWORD: platform
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: change-me-change-me-change-me-change-me-change-me-1234567890
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - kafka
 
-  # cart-service:
-  #   build: ../../../cart-service
-  #   ports: ["8082:8080"]
-  #   depends_on: [redis, kafka]
+  cart-service:
+    build: ../../../cart-service
+    environment:
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8082:8082"
+    depends_on:
+      - redis
+      - kafka
 
-  # order-service:
-  #   build: ../../../order-service
-  #   ports: ["8083:8080"]
-  #   depends_on: [postgres, kafka]
+  order-service:
+    build: ../../../order-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/order_db
+      DB_USERNAME: platform
+      DB_PASSWORD: platform
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - kafka
 
-  # inventory-service:
-  #   build: ../../../inventory-service
-  #   ports: ["8084:8080"]
-  #   depends_on: [postgres, kafka]
+  inventory-service:
+    build: ../../../inventory-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/inventory_db
+      DB_USERNAME: platform
+      DB_PASSWORD: platform
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
 
-  # payment-switch-gateway:
-  #   build: ../../../payment-switch-gateway
-  #   ports: ["8085:8080"]
-  #   depends_on: [postgres, kafka]
+  payment-switch-gateway:
+    build: ../../../payment-switch-gateway
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/payment_db
+      DB_USERNAME: platform
+      DB_PASSWORD: platform
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - kafka
 
-  # product-search-engine:
-  #   build: ../../../product-search-engine
-  #   ports: ["8086:8080"]
-  #   depends_on: [elasticsearch, kafka]
+  product-search-engine:
+    build: ../../../product-search-engine
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/search_db
+      DB_USERNAME: platform
+      DB_PASSWORD: platform
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - elasticsearch
+      - redis
+      - kafka
 
-  # recommendation_engine:
-  #   build: ../../../recommendation_engine
-  #   ports: ["8087:8000"]
-  #   depends_on: [kafka]
+  recommendation_engine:
+    build:
+      context: ../../../recommendation_engine
+      dockerfile: Dockerfile.api
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8087:8000"
+    depends_on:
+      - kafka
 
-  # real_time_fraud_detection_system:
-  #   build: ../../../real_time_fraud_detection_system
-  #   ports: ["8088:8000"]
-  #   depends_on: [kafka]
+  real_time_fraud_detection_system:
+    build: ../../../real_time_fraud_detection_system
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+    ports:
+      - "8088:8088"
+    depends_on:
+      - kafka
+      - redis
 
-  # real_time_analytics_dashboard:
-  #   build: ../../../real_time_analytics_dashboard
-  #   ports: ["8089:8000"]
-  #   depends_on: [kafka]
+  real_time_analytics_dashboard:
+    build:
+      context: ../../../real_time_analytics_dashboard
+      dockerfile: Dockerfile.backend
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_URL: jdbc:postgresql://postgres:5432/analytics_db
+    ports:
+      - "8089:8000"
+    depends_on:
+      - postgres
+      - kafka
 
 volumes:
   postgres_data:
