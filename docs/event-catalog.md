@@ -22,3 +22,14 @@ List-e kamel-e Kafka topic-ha va event-haee ke bein-e service-ha rad-o-badal mis
 Topic-ha az format-e `<domain>.<event_past_tense>` peyravi mikonan (masalan `order.created`, na `create-order` ya `OrderCreated`).
 
 Schema-haye rasmi-e in event-ha dar `shared/java-common-lib` (Java) va `shared/python-common-lib` (Python) tarif shodan.
+
+## Saga Compensation
+
+`inventory.reservation_cancel` topic-e compensation-e saga-e: vaghti order-service `fraud.flagged` ya `payment.failed` ro migire, order-ro `CANCELLED` mikone va in event-ro publish mikone ta inventory-service reservation-e marboote-ro cancel kone va stock-o release kone. Natije: `order.cancelled` publish mishe.
+
+In flow-o [architecture.md](architecture.md#compensation-path-fraud--payment-failure) diagram karde, va `scripts/test-e2e.sh` (fraud-flag branch) end-to-end test-esh mikone — checkout -> `fraud.flagged` -> order `CANCELLED` -> reservation-e marboote `CANCELLED`.
+
+## Testing Coverage
+
+- **Pooshesh dare** (`scripts/test-e2e.sh`): `cart.checkout`, happy-path `payment.succeeded`, `fraud.flagged` + `inventory.reservation_cancel` compensation.
+- **Pooshesh nadare hanuz**: `payment.failed` (be jaye fraud), `inventory.reservation_failed` (out-of-stock scenario), retry/timeout/idempotency-e consumer-ha.

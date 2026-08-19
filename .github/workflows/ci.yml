@@ -49,3 +49,14 @@ jobs:
       - uses: ludeeus/action-shellcheck@master
         with:
           files: scripts/*.sh
+
+  e2e-syntax-check:
+    # This repo has no application service code (see README) — the sibling
+    # service repos that docker-compose.full.yml builds from aren't present
+    # in CI, so the saga can't actually run here. This job only guards
+    # against syntax regressions in the e2e script; run it for real locally
+    # via `./scripts/test-e2e.sh` after `./scripts/setup-local-env.sh`.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n scripts/test-e2e.sh

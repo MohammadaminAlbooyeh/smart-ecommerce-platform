@@ -152,4 +152,23 @@ docker exec "$KAFKA_SERVICE" kafka-console-producer \
 
 wait_status "$FRAUD_ORDER_ID" "CANCELLED"
 
-log "E2E PASSED — fraud order $FRAUD_ORDER_ID cancelled with compensation."
+log "Verifying inventory.reservation_cancel compensation released stock"
+for i in $(seq 1 20); do
+  RES_STATUS=$(curl -sf "$INVENTORY_URL/api/inventory/orders/$FRAUD_ORDER_ID/reservations" 2>/dev/null \
+    | python3 -c "
+import sys,json
+try:
+    reservations=json.load(sys.stdin)
+    print(reservations[0]['status'] if reservations else '')
+except Exception:
+    print('')
+")
+  if [ "$RES_STATUS" = "CANCELLED" ]; then
+    break
+  fi
+  sleep 1
+done
+[ "$RES_STATUS" = "CANCELLED" ] || fail "reservation for order $FRAUD_ORDER_ID not released (last status: ${RES_STATUS:-none})"
+log "    reservation for $FRAUD_ORDER_ID -> CANCELLED (stock released via inventory.reservation_cancel)"
+
+log "E2E PASSED — fraud order $FRAUD_ORDER_ID cancelled with compensation (order.cancelled + inventory.reservation_cancel)."
