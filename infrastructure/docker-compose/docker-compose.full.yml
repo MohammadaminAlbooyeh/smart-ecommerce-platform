@@ -4,8 +4,8 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: platform
-      POSTGRES_PASSWORD: platform
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-platform}
     ports:
       - "5432:5432"
     volumes:
@@ -50,10 +50,10 @@ services:
     build: ../../../user-service
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/user_db
-      DB_USERNAME: platform
-      DB_PASSWORD: platform
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      JWT_SECRET: change-me-change-me-change-me-change-me-change-me-1234567890
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-secure-random-string-at-least-32-chars}
     ports:
       - "8081:8081"
     depends_on:
@@ -63,8 +63,8 @@ services:
   cart-service:
     build: ../../../cart-service
     environment:
-      REDIS_HOST: redis
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8082:8082"
     depends_on:
@@ -75,9 +75,9 @@ services:
     build: ../../../order-service
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/order_db
-      DB_USERNAME: platform
-      DB_PASSWORD: platform
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8083:8083"
     depends_on:
@@ -88,10 +88,10 @@ services:
     build: ../../../inventory-service
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/inventory_db
-      DB_USERNAME: platform
-      DB_PASSWORD: platform
-      REDIS_HOST: redis
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8084:8084"
     depends_on:
@@ -103,9 +103,9 @@ services:
     build: ../../../payment-switch-gateway
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/payment_db
-      DB_USERNAME: platform
-      DB_PASSWORD: platform
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8085:8085"
     depends_on:
@@ -116,12 +116,12 @@ services:
     build: ../../../product-search-engine
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/search_db
-      DB_USERNAME: platform
-      DB_PASSWORD: platform
-      ELASTICSEARCH_HOST: elasticsearch
-      ELASTICSEARCH_PORT: 9200
-      REDIS_HOST: redis
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST:-elasticsearch}
+      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT:-9200}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8086:8086"
     depends_on:
@@ -135,7 +135,7 @@ services:
       context: ../../../recommendation_engine
       dockerfile: Dockerfile.api
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
     ports:
       - "8087:8000"
     depends_on:
@@ -144,8 +144,8 @@ services:
   real_time_fraud_detection_system:
     build: ../../../real_time_fraud_detection_system
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      REDIS_HOST: ${REDIS_HOST:-redis}
     ports:
       - "8088:8088"
     depends_on:
@@ -157,8 +157,10 @@ services:
       context: ../../../real_time_analytics_dashboard
       dockerfile: Dockerfile.backend
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
       DB_URL: jdbc:postgresql://postgres:5432/analytics_db
+      DB_USERNAME: ${DB_USERNAME:-platform}
+      DB_PASSWORD: ${DB_PASSWORD:-platform}
     ports:
       - "8089:8000"
     depends_on:
